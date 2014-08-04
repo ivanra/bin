@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Fetch content from given URLs or standard input, and extract and display all available HTTP/HTTPS URLs.
+#
+
+[ "$1" = "-h" -o "$1" = "--help" ] && 
+{ cat <<EOF
+Usage: `basename $0` [URL] ...
+Return all HTTP/HTTPS URLs available in content retrieved from specified URLs, or read from standard input.
+
+EOF
+exit 0;
+}
+
+if [ -z "$1" ]; then cat; else curl -s "$@"; fi |
+
+# regex based on http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+# (and somewhat dumbed down)
+# you need GNU grep here w/ perl-regexp support
+
+grep -o -P "(?i)\b((?:https?://)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+"\
+"(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s\`!()\[\]{};:'\".,<>?«»“”‘’]))"

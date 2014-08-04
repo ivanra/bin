@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# Download and install the latest version of ack (to $HOME/bin)
+#
+
+set -e
+
+ack_url="`curl -sL http://beyondgrep.com/install/ | 
+sed -ne 's@^.*<a href="\(http://beyondgrep.com/ack.*single-file\)".*@\1@p'`"
+
+echo "Downloading $ack_url to $HOME/bin..."
+
+[ -d ~/bin ] || mkdir ~/bin
+
+curl -sL "$ack_url" -o ~/bin/ack &&
+chmod 0755 ~/bin/ack
+
+exit

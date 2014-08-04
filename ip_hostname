@@ -1,0 +1,11 @@
+#!/bin/sh
+# read single IP address per line from input file(s) (or stdin), and print IP
+# address and its resolved hostname (or "[unknown]") per line with a single
+# space delimiter
+
+cat ${@:--} |
+while read -r ip; do
+    host_name="`dig +short -x $ip`"
+    [ -z "$host_name" ] && host_name="[unknown]"
+    echo "$ip $host_name"
+done

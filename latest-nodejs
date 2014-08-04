@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# Download and install the latest version of node.js (to $HOME/bin)
+#
+
+set -e
+
+uname -m | grep "64" >/dev/null 2>&1 &&
+node_arch="x64" ||
+node_arch="x86"
+
+node_os="`uname -s | tr '[:upper:]' '[:lower:]'`"
+
+node_binary="`curl -sL http://nodejs.org/download/ |
+sed -ne 's@.*\(http://nodejs\.org/dist/.*/node-.*-'$node_os'-'$node_arch'.tar.gz\).*@\1@p'`"
+
+echo "Downloading $node_binary..."
+curl -sL "$node_binary" | tar xvzf -
+
+node_path="`pwd`/`basename $node_binary .tar.gz`"
+
+# create symlinks $HOME/bin/{node,npm}
+[ -d ~/bin ] || mkdir ~/bin
+ln -sfv "$node_path/bin/node" "$HOME/bin/node"
+ln -sfv "$node_path/bin/npm" "$HOME/bin/npm"
+
+exit

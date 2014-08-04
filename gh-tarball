@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Download/backup GitHub repository tarballs for the given user.
+#
+
+set -e
+
+if [ -z "$1" -o -z "$2" ]; then
+    cat <<EOF
+usage: $0 [user] [repository ...]
+note: if repository is -, all of the user's repositories will be downloaded.
+EOF
+    exit 0
+fi
+
+gh_user="$1"
+shift
+
+if [ "$1" = "-" ]; then
+    # GitHub API call to download a list of repos for the $gh_user
+    curl -s -L "https://api.github.com/users/$gh_user/repos" | 
+    sed -ne 's/.*"html_url":\s*"\(https:\/\/github.com\/'$gh_user'\/.*\)".*/\1/p'
+else
+    while [ -n "$1" ]; do
+        echo "https://github.com/$gh_user/$1"
+        shift
+    done
+fi |
+while read url; do
+    wget --content-disposition "$url/tarball/master"
+done
+
+exit

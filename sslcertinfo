@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# Return SSL certificate info for given URLs.
+#
+
+[ "$1" = "-h" -o "$1" = "--help" ] &&
+{
+    cat <<EOF
+Usage: `basename $0` [URL] ...
+Return SSL certificate info for URLs read from command line or standard input.
+If no URLs are specified as command line arguments, read from standard input.
+
+EOF
+exit 0;
+}
+
+deps="expr openssl sed"
+
+for dep in $deps; do
+    if ! which "$dep" >/dev/null 2>&1; then
+        echo "`basename $0`: error: missing dependency, $dep needs to be installed." >&2
+        exit 1
+    fi
+done
+
+if [ $# -eq 0 ]; then
+    cat
+else
+    for i; do
+        echo $i
+    done
+fi |
+while read -r line; do
+    if [ -z "$line" ]; then
+        continue
+    fi
+    if expr "$line" : "https://.*" >/dev/null 2>&1 ; then
+        line="`expr "$line" : "https://\(.*\)"`"
+    fi
+    if ! expr "$line" : '.*:[0-9]\+$' >/dev/null 2>&1 ; then
+        line="$line:443"
+    fi
+    echo | 
+    openssl s_client -connect $line 2>&1 |
+    sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' |
+    openssl x509 -noout -text
+done
+

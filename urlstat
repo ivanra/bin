@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# Return HTTP status codes for URLs read from files or standard input.
+#
+
+help() {
+    cat<<EOF 
+Usage: `basename $0` [options] [filename] ...
+Return HTTP status codes for URLs read from files or standard input.
+
+If no filenames are provided, read from standard input. Each line read is assumed to be a single URL.
+
+Options:
+  -p [number]  max processes to use/parallel queries to perform (default is ${default_procs})
+  -r           print redirection URL if one exists (HTTP status code 30x returned)
+
+The output consists of HTTP_STATUS_CODE, URL_EFFECTIVE, and optionally REDIRECT_URL if "-r" option is specified. Elements are separated with horizontal tabs.
+
+Note: The order of output URLs is not necessarily in the same order as input URLs are provided if argument to "-p" option is a value larger than 1.
+
+EOF
+}
+
+deps="curl xargs"
+default_procs=1
+curl_cmd="curl --silent --output /dev/null --write-out"
+
+while true; do
+    case "$1" in
+        -h|--help) 
+            help; exit 0 ;;
+        -p) 
+            if [ "$2" -ge 1 ] 2>/dev/null ; then
+                max_procs="$2"
+            else
+                echo "`basename $0`: invalid number of max processes: $2" >&2
+                exit 1
+            fi
+            shift 2 ;;
+        -r) 
+            redirect_urls=true; shift 1 ;;
+        -*) 
+            echo "`basename $0`: invalid option: $1" >&2 ; exit 1 ;;
+        *) 
+            break ;;
+    esac
+done
+
+for dep in $deps; do
+    if ! which "$dep" >/dev/null 2>&1; then
+        echo "`basename $0`: error: $dep needs to be installed." >&2
+        exit 1
+    fi
+done
+
+max_procs=${max_procs:-$default_procs}
+
+output_fmt="%{http_code}\\t%{url_effective}"
+if [ $redirect_urls ] ; then
+    output_fmt="$output_fmt\\t%{redirect_url}"
+fi
+output_fmt="$output_fmt\\n"
+
+curl_cmd="$curl_cmd $output_fmt"
+
+if [ $# -eq 0 ]; then
+    cat
+else
+    for i; do
+        echo $i
+    done
+fi | xargs -L 1 -P $max_procs $curl_cmd
+
+exit
+

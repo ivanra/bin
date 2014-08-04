@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Return supported SSL ciphers for given hostnames.
+#
+
+deps='expr openssl'
+
+[ "$1" = "-h" -o "$1" = "--help" ] &&
+{
+    cat <<EOF
+Usage: `basename $0` [hostname ...]
+Return a list of supported SSL ciphers for hostnames read from command line or standard input.
+If no hostnames are specified as command line arguments, read from standard input.
+
+Note: Only ciphers available in the currently installed OpenSSL version will be tested.
+
+Dependencies: $deps
+EOF
+    exit 0
+}
+
+for dep in $deps ; do
+    if ! which "$dep" >/dev/null 2>&1; then
+        echo "`basename $0`: error: missing dependency, $dep needs to be installed." >&2
+        exit 1
+    fi
+done
+
+if [ $# -eq 0 ] ; then
+    cat
+else
+    for arg ; do
+        echo $arg
+    done
+fi |
+while read -r host_name ; do
+    target=$host_name
+    if expr "$target" : "https://.*" >/dev/null 2>&1 ; then
+        target="`expr "$target" : "https://\(.*\)"`"
+    fi
+    if ! expr "$target" : '.*:[0-9]\+$' >/dev/null 2>&1 ; then
+        target="$target:443"
+    fi
+
+    OIFS=$IFS
+    IFS=':'
+    for i in `openssl ciphers 'ALL:!eNULL'` ; do
+        echo -n "$host_name $i "
+        res=`echo | openssl s_client -cipher "$i" -connect "$target" 2>&1`
+        if [ $? = 0 ] ; then
+            echo "yes"
+        elif expr "$res" : "gethostbyname failure" > /dev/null 2>&1 ; then
+            echo "host not found"
+        else
+            echo "no"
+        fi
+    done
+    IFS=$OIFS
+done
+
+exit
+

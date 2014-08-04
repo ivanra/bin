@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# Return a personalized MIT/APACHE license.
+#
+
+help() {
+    cat <<EOF
+Usage: `basename $0` [options] AUTHOR ...
+Return a personalized MIT or APACHE license, with the current year and a copyright owner as provided in arguments.
+
+Options:
+  --mit     return an MIT license (default)
+  --apache  return an APACHE 2.0 license
+
+EOF
+}
+
+case "$1" in
+    ""|-h|--help)
+        help; exit 0 ;;
+    --mit|--MIT)
+        license_type=MIT; shift;;
+    --apache|--APACHE)
+        license_type=APACHE; shift;;
+    *) ;;
+esac
+
+license_type=${license_type:-"MIT"}
+
+tag_begin="--- BEGIN ${license_type} LICENSE ---"
+tag_end="--- END ${license_type} LICENSE ---"
+
+exec sed -n -e \
+'/'"${tag_begin}"'/,/'"${tag_end}"'/ {
+    /'"${tag_begin}"'/b
+    /'"${tag_end}"'/b
+    s/\[yyyy\]/'`date +%Y`'/
+    s/\[name of copyright owner\]/'"$*"'/
+    p
+}' <<EOF
+
+--- BEGIN MIT LICENSE ---
+Copyright (c) [yyyy] [name of copyright owner] 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+--- END MIT LICENSE ---
+
+--- BEGIN APACHE LICENSE ---
+Copyright [yyyy] [name of copyright owner]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+--- END APACHE LICENSE ---
+
+EOF

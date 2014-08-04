@@ -1,0 +1,10 @@
+#!/bin/sh
+# 
+# Render Markdown text using github API (http://developer.github.com/v3/markdown/).
+# Note: v3 API has a limit of 60 requests per hour for unauthenticated users.
+#
+
+cat ${*:--} |
+curl -s --data-binary @- -H "Content-Type: text/plain" https://api.github.com/markdown/raw
+
+exit

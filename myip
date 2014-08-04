@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# usage: $0 [-l] [-n]
+#   -l flag causes local IP addresses to be displayed
+#   -n flag causes netmask to be displayed as well (only valid with -l flag)
+
+
+local_addr=
+netmask_fmt=
+while [ -n "$1" ]; do
+    case $1 in
+        -l)
+            local_addr=1 ;;
+        -n)
+            netmask_fmt="\/\4" ;;
+        *)
+            echo "error: invalid argument $1" >&2
+            exit 1 ;;
+    esac
+    shift
+done
+
+if [ -n "$local_addr" ]; then
+    ifconfig -a |
+    sed -n -E -e \
+    '/127.0.0.1/!s/.*\s*inet (addr:)?([0-9.]*).*(Mask:|netmask )([^ ]*).*/\2'"$netmask_fmt"'/p'
+else
+    exec dig +short myip.opendns.com @resolver1.opendns.com @resolver2.opendns.com
+fi
+
+exit

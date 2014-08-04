@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# Return HTTP headers for specified URLs.  
+#
+
+help() {
+    cat<<EOF
+Usage: `basename $0` [-i] [URL] ... 
+Return HTTP headers for specified URLs.
+
+If no URLs are provided as arguments, read from standard input.
+
+Options:
+  -i  make an HTTP HEAD request instead of HTTP GET
+
+EOF
+}
+
+deps="curl xargs"
+curl_cmd="curl -I --silent"
+curl_cmd_http_get="-X GET"
+
+while true; do
+    case "$1" in
+        -h|--help) 
+            help; exit 0 ;;
+        -i)
+            curl_cmd_http_get=""; shift ;;
+        -*)
+            echo "`basename $0`: invalid option: $1" >&2 ; exit 1 ;;
+        *)
+            break ;;
+    esac
+done
+
+for dep in $deps; do
+    if ! which "$dep" >/dev/null 2>&1 ; then
+        echo "`basename $0`: error: $dep needs to be installed." >&2
+        exit 1
+    fi
+done
+
+[ -n "$curl_cmd_http_get" ] && curl_cmd="$curl_cmd $curlcmd_http_get"
+
+if [ $# -eq 0 ] ; then
+    cat | xargs -L20 $curl_cmd
+else
+    $curl_cmd "$@"
+fi
+
+exit
+
