@@ -14,6 +14,11 @@ node_os="`uname -s | tr '[:upper:]' '[:lower:]'`"
 node_binary="`curl -sL http://nodejs.org/download/ |
 sed -ne 's@.*\(http://nodejs\.org/dist/.*/node-.*-'$node_os'-'$node_arch'.tar.gz\).*@\1@p'`"
 
+if [ "$1" = "-s" ]; then
+    echo "Latest version is $node_binary"
+    exit 0
+fi
+
 echo "Downloading $node_binary..."
 curl -sL "$node_binary" | tar xvzf -
 
