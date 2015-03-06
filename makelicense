@@ -35,7 +35,7 @@ exec sed -n -e \
     /'"${tag_begin}"'/b
     /'"${tag_end}"'/b
     s/\[yyyy\]/'`date +%Y`'/
-    s/\[name of copyright owner\]/'"$*"'/
+    s^\[name of copyright owner\]^'"$*"'^
     p
 }' <<EOF
 
