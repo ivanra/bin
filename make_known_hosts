@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+# usage: make_known_hosts [FILE ...]
+#
+# Read a list of hostnames from input files (or stdin, if no arguments are
+# provided), and print an `ssh_known_hosts` output to stdout. Input lines
+# starting with '#' will be ignored.
+#
+
+cat "${@:--}" |
+while read -r line; do
+    if [[ $line =~ ^\# ]]; then
+        continue
+    fi
+    (echo $line; dig +short $line) |
+    paste -s -d',' - |
+    xargs -L 1 -I{} ssh-keyscan "{}" 2>/dev/null
+done
+
+exit
