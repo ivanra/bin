@@ -5,8 +5,8 @@
 
 set -e
 
-ack_url="`curl -sL http://beyondgrep.com/install/ | 
-sed -ne 's@^.*<a href="\(http://beyondgrep.com/ack.*single-file\)".*@\1@p'`"
+ack_url="`curl -sL https://beyondgrep.com/install/ | 
+sed -ne 's@^.*<a href="\(https://beyondgrep.com/ack.*single-file\)".*@\1@p'`"
 
 echo "Downloading $ack_url to $HOME/bin..."
 
